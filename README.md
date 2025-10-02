@@ -115,7 +115,7 @@
         <input id="formCode" type="text" placeholder="Código" />
         <input id="formName" type="text" placeholder="Nombre completo" />
         <button id="btnAddPerson">Agregar / Actualizar</button>
-        <table id="peopleTable" style="margin-top:12px; width:100%;">
+        <table id="peopleTable" style="margin-top:12px; width:100%; ">
           <thead><tr><th>Código</th><th>Nombre</th><th>Acciones</th></tr></thead>
           <tbody></tbody>
         </table>
@@ -233,16 +233,30 @@
     tabRegistro.addEventListener('click',()=>{ panelRegistro.style.display='block'; panelAdmin.style.display='none'; tabRegistro.classList.add('primary'); tabAdmin.classList.remove('primary'); });
     tabAdmin.addEventListener('click',()=>{ panelRegistro.style.display='none'; panelAdmin.style.display='block'; tabAdmin.classList.add('primary'); tabRegistro.classList.remove('primary'); });
 
+    // --- Verificar permiso de cámara
+    async function checkCameraPermission() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        stream.getTracks().forEach(track => track.stop());
+        return true;
+      } catch (err) {
+        alert("Debes permitir acceso a la cámara en tu navegador");
+        return false;
+      }
+    }
+
     // --- Modal cámara
     const btnCamera=document.getElementById('btnCamera'), camModal=document.getElementById('cameraModal'), btnCloseCam=document.getElementById('btnCloseCam');
     let html5QrCode=null;
-    btnCamera.addEventListener('click',()=>{
-      camModal.style.display='flex';
-      html5QrCode=new Html5Qrcode("reader");
-      html5QrCode.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:150}},(decodedText)=>{
-        addScan(decodedText);
-        camModal.style.display='none'; html5QrCode.stop(); html5QrCode=null;
-      });
+    btnCamera.addEventListener('click',async ()=>{
+      if(await checkCameraPermission()){
+        camModal.style.display='flex';
+        html5QrCode=new Html5Qrcode("reader");
+        html5QrCode.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:150}},(decodedText)=>{
+          addScan(decodedText);
+          camModal.style.display='none'; html5QrCode.stop(); html5QrCode=null;
+        });
+      }
     });
     btnCloseCam.addEventListener('click',()=>{ 
       camModal.style.display='none'; 
