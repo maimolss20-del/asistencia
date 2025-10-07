@@ -184,11 +184,19 @@
     });
 
     btnClear.onclick=()=>{ if(confirm("Borrar todo el historial?")){ scans=[]; save(KEY_SCANS,scans); renderRecent(); renderCounts(); } };
+
+    // --- Export CSV with consolidation ---
     btnExport.onclick=()=>{ 
-      let csv="Nombre,Código,Fecha,Hora\n";
+      let csv="Nombre,Código,Fecha,Hora,Veces\n";
+      const map={};
       scans.forEach(s=>{
-        const d=s.ts.split('T'); 
-        csv+=`"${people[s.code]||'?' }","${s.code}","${d[0]}","${d[1].slice(0,8)}"\n`;
+        const key=s.code+"_"+s.ts.split('T')[0]; // agrupamos por código y fecha
+        if(!map[key]) map[key]={code:s.code, name:people[s.code]||'?', ts:s.ts, count:0};
+        map[key].count++;
+      });
+      Object.values(map).forEach(item=>{
+        const d=item.ts.split('T');
+        csv+=`"${item.name}","${item.code}","${d[0]}","${d[1].slice(0,8)}","${item.count}"\n`;
       });
       const blob=new Blob([csv],{type:'text/csv'});
       const url=URL.createObjectURL(blob);
@@ -225,18 +233,14 @@
         cameraSelect.value,
         { fps: 10, qrbox: 250 },
         decoded => {
-          // Confirmación antes de registrar
           if(confirm(`¿Deseas registrar el código: ${decoded}?`)){
             scans.push({ code: decoded, ts: new Date().toISOString() });
             save(KEY_SCANS, scans);
             renderRecent();
             renderCounts();
-
-            // Cerrar cámara automáticamente
-            html5QrcodeScanner.stop().then(() => {
-              cameraModal.style.display = 'none';
-            });
+            html5QrcodeScanner.stop().then(() => cameraModal.style.display = 'none');
           }
+          // si cancela, no hace nada y la cámara sigue activa
         }
       );
     };
