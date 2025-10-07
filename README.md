@@ -217,21 +217,34 @@
       });
     };
 
-    btnStartCam.onclick=()=>{
+    btnStartCam.onclick = () => {
       if(html5QrcodeScanner) html5QrcodeScanner.stop();
-      html5QrcodeScanner=new Html5Qrcode("reader");
-      html5QrcodeScanner.start(cameraSelect.value, {fps:10, qrbox:250}, decoded=>{
-        scans.push({code:decoded, ts:new Date().toISOString()});
-        save(KEY_SCANS,scans);
-        renderRecent(); renderCounts();
-      });
+      html5QrcodeScanner = new Html5Qrcode("reader");
+
+      html5QrcodeScanner.start(
+        cameraSelect.value,
+        { fps: 10, qrbox: 250 },
+        decoded => {
+          // Confirmación antes de registrar
+          if(confirm(`¿Deseas registrar el código: ${decoded}?`)){
+            scans.push({ code: decoded, ts: new Date().toISOString() });
+            save(KEY_SCANS, scans);
+            renderRecent();
+            renderCounts();
+
+            // Cerrar cámara automáticamente
+            html5QrcodeScanner.stop().then(() => {
+              cameraModal.style.display = 'none';
+            });
+          }
+        }
+      );
     };
 
     btnCloseCam.onclick=()=>{
       cameraModal.style.display='none';
       if(html5QrcodeScanner) html5QrcodeScanner.stop();
     };
-
   </script>
 
 </body>
